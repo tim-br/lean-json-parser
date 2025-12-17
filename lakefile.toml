@@ -1,0 +1,10 @@
+name = "lean-json-parser"
+version = "0.1.0"
+defaultTargets = ["lean-json-parser"]
+
+[[lean_lib]]
+name = "LeanJsonParser"
+
+[[lean_exe]]
+name = "lean-json-parser"
+root = "Main"
