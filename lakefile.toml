@@ -8,3 +8,7 @@ name = "LeanJsonParser"
 [[lean_exe]]
 name = "lean-json-parser"
 root = "Main"
+
+[[lean_exe]]
+name = "tests"
+root = "Tests"
