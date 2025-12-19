@@ -2,6 +2,22 @@ import LeanJsonParser
 import LeanJsonParser.Basic
 
 mutual
+
+  partial def matchAndReadPair (str : String) : Parser Bool := do
+      let c1 ← peekChar str
+      match c1 with
+      | '{' => readPair str ('{', '}')
+      | '[' => readPair str ('[', ']')
+      | _ => Except.error s!"Expected, '\{' or '[', actual {c1}!"
+
+  partial def readPairAndChar (str : String) (pair : Char × Char) (ch : Char) : Parser Bool := do
+    let res1 ← readPair str pair
+    let res2 ← readChar str ch
+    if res1 then
+      pure res2
+    else
+      pure false
+
   partial def readStringOrKey (str : String): Parser Bool := do
     let pos ← get
     let spos : String.Pos.Raw := ⟨pos⟩
@@ -27,22 +43,23 @@ mutual
       else
         match c1 with
         | '{' =>
-          let res1 ← readPair str ('{', '}')
-          let res2 ← readChar str ch
-          if res1 then
-            pure res2
-          else
-            pure false
+          readPairAndChar str ('{', '}') ch
         | '[' =>
-          let res1 ← readPair str ('[', ']')
-          let res2 ← readChar str ch
-          if res1 then
-            pure res2
-          else
-            pure false
+          readPairAndChar str ('[', ']') ch
         | '"' =>
           _ ← consumeChar str
           let res1 ← readStringOrKey str
+          let c1 ← peekChar str
+          dbg_trace s!"c1  = {c1}"
+          if c1 == ':' then
+            _ ← consumeChar str
+            let res1 ← matchAndReadPair str
+            let res2 ← readChar str ch
+            if res1 then
+              pure res2
+            else
+              pure false
+          else
           let res2 ← readChar str ch
           if res1 then
             pure res2
@@ -64,16 +81,14 @@ end
 
 def parseJSON (str : String) : Except String Bool := do
   let result ← (do
-    let c1 ← peekChar str
-    match c1 with
-    | '{' => let res ← readPair str ('{', '}')
-             let pos ← get
-             let spos: String.Pos.Raw := ⟨pos⟩
-             if  spos < str.endPos then
-              pure false
-             else
-             pure res
-    | _ => pure false
+    let res ← matchAndReadPair str
+    let pos ← get
+    let spos: String.Pos.Raw := ⟨pos⟩
+    if  spos < str.endPos then
+    dbg_trace "returning false"
+    pure false
+    else
+    pure res
   ).run 0
   pure result.1
 
