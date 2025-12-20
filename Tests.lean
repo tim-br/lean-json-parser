@@ -65,6 +65,10 @@ def runTests : IO UInt32 := do
   let res9 ← testJSON test9 false "test9 (invalid - extra colon)"
   allPassed := allPassed && res9
 
+  let test10 := "{\"bar\":\"q\",\"foo\":\"q\"}"
+  let res10 ← testJSON test10 true "test10 (valid - multiple keys)"
+  allPassed := allPassed && res10
+
   IO.println "\n============================\n"
   if allPassed then
     IO.println "All tests passed!"

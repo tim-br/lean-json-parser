@@ -36,8 +36,8 @@ mutual
                dbg_trace s!"next {next}"
                match res with
                 | Sum.inl n => Except.error s!"{n}"
-                | Sum.inr parsingValue?' => pure true--matchAndReadPair str parsingValue?'
-      | _ => Except.error s!"Expected '\{' or '[' or \", actual {c1}!"
+                | Sum.inr parsingValue?' => matchAndReadPair str parsingValue?'
+      | _ => if parsingValue? == true then Except.error s!"Expected '\{' or '[' or \", actual {c1}!" else pure true
 
   partial def readPairAndChar (str : String) (pair : Char × Char) (ch : Char) (parsingValue? : Bool) : Parser Bool := do
     let res1 ← readPair str pair parsingValue?
@@ -61,7 +61,7 @@ mutual
       if ch == '"' then
         dbg_trace "end of string"
         let pk ← peekChar str
-        dbg_trace s!"parsing value {parsingValue?}"
+        dbg_trace s!"parsing value {parsingValue?} pk {pk}"
         match pk, parsingValue? with
         | ':', true => pure (Sum.inl "unexpected :")
         | ':', false => do
@@ -70,7 +70,11 @@ mutual
                           let pk ← peekChar str
                           dbg_trace s! "pk {pk}"
                           pure (Sum.inr true)
-        | _, false => pure (Sum.inl "expected :")
+        | ',', true => do
+                         _ ← consumeChar str
+                         pure (Sum.inr false)
+        | ',', false => pure (Sum.inl "unexpected ,")
+        | _, false => pure (Sum.inl "expected : ")
         | _, _ => pure (Sum.inr false)
       else
         readStringOrKey str parsingValue?
@@ -106,6 +110,8 @@ mutual
           | Sum.inr parsingValue?' =>
             if parsingValue?' then
               dbg_trace "match and read a"
+              let ch3 ← peekChar str
+              dbg_trace s!"ch3 {ch3}"
               let res ← matchAndReadPair str parsingValue?'
               if res then
                 let res2 ← (readChar str ch parsingValue?')
@@ -114,7 +120,19 @@ mutual
                 pure res
             else
               readChar str ch parsingValue?'
-
+        | ',' =>
+          dbg_trace " got ,"
+          _ ← consumeChar str
+          let quote ← peekChar str
+          if quote != '"' then
+            Except.error s!"Expected \" actual {c1}!"
+          else
+            let res ← matchAndReadPair str false
+            if res then
+              dbg_trace "if statement"
+              readChar str ch false
+            else
+              pure false
         | _ =>
             if parsingValue? then
               Except.error s!"unexpected key {c1}"
