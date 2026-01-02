@@ -1,11 +1,10 @@
 # lean-json-parser
 
-A minimal JSON parser implementation in Lean 4. Currently supports parsing empty objects (`{}`) and strings.
+A minimal JSON parser implementation in Lean 4 as a response to the Build Your Own JSON Parser challenge (https://codingchallenges.fyi/challenges/challenge-json-parser).
 
 ## Usage
 
 ```bash
-cat test.json | tr -d '\n' | lake exe lean-json-parser
+ cat tests/mytests/test3.json | lake exe lean-json-parser 
+## valid JSON!
 ```
-
-**Note:** Newlines must be removed from the input using `tr -d '\n'` before parsing.
