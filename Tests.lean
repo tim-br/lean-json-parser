@@ -1,80 +1,54 @@
 import LeanJsonParser
 import LeanJsonParser.Basic
+import LeanTest
 
-def testJSON (input : String) (expected : Bool) (name : String) : IO Bool := do
+open LeanTest
+
+/-- Test that a JSON string is parsed as valid -/
+def testJSONValid (input : String) : IO AssertionResult := do
   let result := parseJSON input
   match result with
   | Except.ok valid =>
-    if valid == expected then
-      IO.println s!"✓ {name}: PASS (got {valid}, expected {expected})"
-      pure true
-    else
-      IO.println s!"✗ {name}: FAIL (got {valid}, expected {expected})"
-      pure false
+    return assertTrue valid s!"Expected valid JSON but got false for: {input}"
   | Except.error e =>
-    if expected == false then
-      IO.println s!"✓ {name}: PASS (errored as expected: {e})"
-      pure true
+    return AssertionResult.failure s!"Expected valid JSON but got error: {e}\nInput: {input}"
+
+/-- Test that a JSON string is parsed as invalid -/
+def testJSONInvalid (input : String) : IO AssertionResult := do
+  let result := parseJSON input
+  match result with
+  | Except.ok valid =>
+    if valid then
+      return AssertionResult.failure s!"Expected invalid JSON but parser accepted it\nInput: {input}"
     else
-      IO.println s!"✗ {name}: FAIL (errored when should succeed: {e})"
-      pure false
+      return AssertionResult.success
+  | Except.error _ =>
+    -- Errors are also considered invalid, which is expected
+    return AssertionResult.success
 
-def runTests : IO UInt32 := do
-  IO.println "Running JSON Parser Tests..."
-  IO.println "============================\n"
+/-- Test suite for invalid JSON strings -/
+def invalidJSONTests : TestSuite :=
+  (TestSuite.empty "Invalid JSON Tests")
+  |>.addTest "missing value after colon" (testJSONInvalid "{\"bar\":}")
+  |>.addTest "extra colon after value" (testJSONInvalid "{\"bar\":\"yolo\":}")
+  |>.addTest "missing colon and value in nested object" (testJSONInvalid "{\"bar\":{\"q\"}}")
+  |>.addTest "extra colon after string value" (testJSONInvalid "{\"bar\":\"q\":}")
 
-  let mut allPassed := true
+/-- Test suite for valid JSON strings -/
+def validJSONTests : TestSuite :=
+  (TestSuite.empty "Valid JSON Tests")
+  |>.addTest "empty nested object" (testJSONValid "{\"bar\":{}}")
+  |>.addTest "string value (yelp)" (testJSONValid "{\"bar\":\"yelp\"}")
+  |>.addTest "string value (yolo)" (testJSONValid "{\"bar\":\"yolo\"}")
+  |>.addTest "nested object with key-value" (testJSONValid "{\"bar\":{\"q\":\"foo\"}}")
+  |>.addTest "multiple keys with whitespace" (testJSONValid " {\"bar\":\"q\",\"foo\":\"q\"}")
+  |>.addTest "failing test" (testJSONValid " {\"bar\":[\"q\",\"q\"]}")
 
-  -- Test 2: Invalid JSON - missing value after "bar":
-  let test2 := "{\"bar\":}"
-  let res2 ← testJSON test2 false "test2 (invalid - missing value)"
-  allPassed := allPassed && res2
-
-  -- Test 3: Currently fails - parser bug with colon handling
-  let test3 := "{\"bar\":{}}"
-  let res3 ← testJSON test3 true "test3 (should be valid - empty object, but parser fails)"
-  allPassed := allPassed && res3
-
-  -- Test 4: Currently fails - parser bug with colon handling
-  let test4 := "{\"bar\":\"yelp\"}"
-  let res4 ← testJSON test4 true "test4 (should be valid - string value, but parser fails)"
-  allPassed := allPassed && res4
-
-  -- Test 5: Currently fails - parser bug with colon handling
-  let test5 := "{\"bar\":\"yolo\"}"
-  let res5 ← testJSON test5 true "test5 (should be valid - string value, but parser fails)"
-  allPassed := allPassed && res5
-
-  -- Test 6: Invalid JSON - extra colon
-  let test6 := "{\"bar\":\"yolo\":}"
-  let res6 ← testJSON test6 false "test6 (invalid - extra colon)"
-  allPassed := allPassed && res6
-
-  -- Test 7: Currently fails - parser bug with colon handling
-  let test7 := "{\"bar\":{\"q\":\"foo\"}}"
-  let res7 ← testJSON test7 true "test7 (should be valid - nested object, but parser fails)"
-  allPassed := allPassed && res7
-
-  -- Test 8: Invalid JSON - missing colon and value in nested object
-  let test8 := "{\"bar\":{\"q\"}}"
-  let res8 ← testJSON test8 false "test8 (invalid - missing colon and value)"
-  allPassed := allPassed && res8
-
-  -- Test 9: Invalid JSON - extra colon
-  let test9 := "{\"bar\":\"q\":}"
-  let res9 ← testJSON test9 false "test9 (invalid - extra colon)"
-  allPassed := allPassed && res9
-
-  let test10 := " {\"bar\":\"q\",\"foo\":\"q\"}"
-  let res10 ← testJSON test10 true "test10 (valid - multiple keys)"
-  allPassed := allPassed && res10
-
-  IO.println "\n============================\n"
-  if allPassed then
-    IO.println "All tests passed!"
-    pure 0
-  else
-    IO.println "Some tests failed!"
-    pure 1
-
-def main : IO UInt32 := runTests
+/-- Main function to run all tests -/
+def main : IO UInt32 := do
+  runTestSuites [
+    invalidJSONTests,
+    validJSONTests
+  ]
+  -- Return 0 for compatibility with test runners that check exit codes
+  pure 0
