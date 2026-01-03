@@ -45,10 +45,8 @@ def validJSONTests : TestSuite :=
   |>.addTest "failing test" (testJSONValid " {\"bar\":[\"q\",\"q\"]}")
 
 /-- Main function to run all tests -/
-def main : IO UInt32 := do
-  runTestSuites [
+def main : IO UInt32 :=
+  runTestSuitesWithExitCode [
     invalidJSONTests,
     validJSONTests
   ]
-  -- Return 0 for compatibility with test runners that check exit codes
-  pure 0
