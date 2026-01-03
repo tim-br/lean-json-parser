@@ -3,8 +3,9 @@ version = "0.1.0"
 defaultTargets = ["lean-json-parser"]
 
 [[require]]
-name = "lean-test"
-git = "https://github.com/tim-br/lean-test.git"
+name = "LeanTest"
+git = "https://github.com/tim-br/LeanTest.git"
+rev = "v0.1.1"
 
 [[lean_lib]]
 name = "LeanJsonParser"
