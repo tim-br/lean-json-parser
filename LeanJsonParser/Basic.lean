@@ -79,22 +79,19 @@ mutual
       | '{' => readPair str ('{', '}') false
       | '[' => readPair str ('[', ']') parsingValue?
       | '"' => _ <- consumeChar str
-               dbg_trace "gets here"
                let res ← readStringOrKey str parsingValue?
                match res with
                 | Sum.inl n => Except.error s!"{n}"
                 | Sum.inr parsingValue?' => do
-                                              dbg_trace s!"matchandreadpair call Alpha {parsingValue?'}"
                                               matchAndReadPair str parsingValue?'
       | _ => if parsingValue? == true
               then
                 let w ← parseWord str ""
-                dbg_trace s!"w is {w}"
                 if w ∈ ["null", "true", "false"] || isFloat w
                 then
                   pure true
                   -- let res ← readStringOrKey str false
-                  -- dbg_trace s!"res is {res}"
+                  --  s!"res is {res}"
                   -- match res with
                   --   | Sum.inl n => Except.error s!"{n}"
                   --   | Sum.inr parsingValue?' => matchAndReadPair str parsingValue?'
@@ -103,7 +100,6 @@ mutual
 
   partial def readPairAndChar (str : String) (pair : Char × Char) (ch : Char) (parsingValue? : Bool) : Parser Bool := do
     let res1 ← readPair str pair parsingValue?
-    dbg_trace "reading char alpha"
     let res2 ← readChar str ch parsingValue?
     if res1 then
       pure res2
@@ -122,7 +118,6 @@ mutual
         let pk ← peekChar str
         match pk, parsingValue? with
         | ':', true => do
-                        dbg_trace "gets here a"
                         pure (Sum.inl "unexpected :")
         | ':', false => do
                           _ ← consumeChar str
@@ -154,17 +149,13 @@ mutual
           readPairAndChar str ('[', ']') ch parsingValue?
         | '"' =>
           _ ← consumeChar str
-          dbg_trace "here"
-          dbg_trace s!" parsing value z : {parsingValue?}"
           let res ← readStringOrKey str parsingValue?
           match res with
           | Sum.inl n => Except.error s!"{n}"
           | Sum.inr parsingValue?' =>
             if parsingValue?' then
-
               let res ← matchAndReadPair str parsingValue?'
               if res then
-                dbg_trace s!"read char v {parsingValue?'}"
                 let res2 ← (readChar str ch false)
                 pure res2
               else
@@ -172,16 +163,13 @@ mutual
             else
               readChar str ch parsingValue?'
         | ',' =>
-          dbg_trace " got ,"
           _ ← consumeChar str
           let quote ← peekChar str
           if quote != '"' then
             Except.error s!"Expected \" actual {c1}!"
           else
-            dbg_trace "matchandReadPair call"
             let res ← matchAndReadPair str false
             if res then
-              dbg_trace "if statement"
               readChar str ch false
             else
               pure false
@@ -189,17 +177,15 @@ mutual
             if parsingValue? then
               Except.error s!"unexpected key {c1}"
             else
-            dbg_trace s!"parsing remainder {ch}"
-            _ ← consumeChar str
-            let res ← readChar str ch parsingValue?
-            pure res
+              _ ← consumeChar str
+              let res ← readChar str ch parsingValue?
+              pure res
 
   partial def readPair (str : String) (pair : Char × Char) (parsingValue? : Bool) : Parser Bool := do
       let c1 ← consumeChar str
       if c1 != pair.fst then
         Except.error s!"Expected: {pair.fst}, actual {c1}!"
       else
-        dbg_trace "reading char zeta"
         readChar str pair.snd parsingValue?
 end
 
