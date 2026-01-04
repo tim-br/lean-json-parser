@@ -33,6 +33,7 @@ def invalidJSONTests : TestSuite :=
   |>.addTest "extra colon after value" (testJSONInvalid "{\"bar\":\"yolo\":}")
   |>.addTest "missing colon and value in nested object" (testJSONInvalid "{\"bar\":{\"q\"}}")
   |>.addTest "extra colon after string value" (testJSONInvalid "{\"bar\":\"q\":}")
+  |>.addTest "test invalid list" (testJSONInvalid "{\"bar\":[\"q\",]}")
 
 /-- Test suite for valid JSON strings -/
 def validJSONTests : TestSuite :=
@@ -42,8 +43,12 @@ def validJSONTests : TestSuite :=
   |>.addTest "string value (yolo)" (testJSONValid "{\"bar\":\"yolo\"}")
   |>.addTest "nested object with key-value" (testJSONValid "{\"bar\":{\"q\":\"foo\"}}")
   |>.addTest "multiple keys with whitespace" (testJSONValid " {\"bar\":\"q\",\"foo\":\"q\"}")
-  -- commented out temporarily
-  --|>.addTest "failing test" (testJSONValid " {\"bar\":[\"q\",\"q\"]}")
+  |>.addTest "testing arrays 1" (testJSONValid " {\"bar\":[\"q\"]}")
+  |>.addTest "testing arrays 2" (testJSONValid " {\"bar\":[\"q\", \"q\"]}")
+  |>.addTest "testing arrays 3" (testJSONValid " {\"bar\":[\"q\", \"q\", \"q\"]}")
+  |>.addTest "testing arrays 4" (testJSONValid " {\"bar\":[22, 43, \"q\"]}")
+  |>.addTest "testing arrays 5" (testJSONValid " {\"bar\":[22, 43, {\"bar\":\"yelp\"}]}")
+
 
 /-- Main function to run all tests -/
 def main : IO UInt32 :=
