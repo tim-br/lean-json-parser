@@ -114,7 +114,7 @@ mutual
                 | Sum.inr _parsingValue?' => pure true
       -- | ',' =>
       --         pure true
-      | ']' => pure false
+      --| ']' => pure false
       | _ => if true
               then
                 let w ← parseWord str ""
