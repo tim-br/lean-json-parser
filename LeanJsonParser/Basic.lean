@@ -80,7 +80,6 @@ mutual
         Except.error s!"Expected: [, actual {c1}!"
       else
         let c2 ← peekChar str
-        dbg_trace s!"c2 next {c2}"
         if c2 == ']' then
           pure true
         else
@@ -91,9 +90,7 @@ mutual
         let res ← matchAndReadValueInList str
         if res then
           let c2 ← peekChar str
-          dbg_trace s!"c2 is {c2}"
           if c2 == ']' then
-            dbg_trace "here?"
             _ ← consumeChar str
             pure true
           else
@@ -117,8 +114,7 @@ mutual
                 | Sum.inr _parsingValue?' => pure true
       -- | ',' =>
       --         pure true
-      | ']' => dbg_trace "is ]"
-               pure false
+      | ']' => pure false
       | _ => if true
               then
                 let w ← parseWord str ""
@@ -249,11 +245,9 @@ mutual
           else
             pure false
 
-          -- dbg_trace s!"c1 is {c1}"
           -- _ ← consumeChar str
           -- let quote ← peekChar str
           -- if quote != '"' then
-          --   dbg_trace s!"spos {spos}"
           --   Except.error s!"Expected \" actual {quote}!"
           -- else
           --   let res ← matchAndReadPair str false
