@@ -79,20 +79,31 @@ mutual
       if c1 ≠ '[' then
         Except.error s!"Expected: [, actual {c1}!"
       else
-        readListHelper str
-
-      where readListHelper (str : String) := do
-        _ ← matchAndReadValueInList str
         let c2 ← peekChar str
+        dbg_trace s!"c2 next {c2}"
         if c2 == ']' then
-          _ ← consumeChar str
           pure true
         else
-          if c2 ≠ ',' then
-            readListHelper str
-          else
+          readListHelper str
+
+      where readListHelper (str : String) := do
+
+        let res ← matchAndReadValueInList str
+        if res then
+          let c2 ← peekChar str
+          dbg_trace s!"c2 is {c2}"
+          if c2 == ']' then
+            dbg_trace "here?"
             _ ← consumeChar str
-            readListHelper str
+            pure true
+          else
+            if c2 ≠ ',' then
+              readListHelper str
+            else
+              _ ← consumeChar str
+              readListHelper str
+        else
+          pure false
 
   partial def matchAndReadValueInList (str : String) : Parser Bool := do
       let c1 ← peekChar str
@@ -104,8 +115,10 @@ mutual
                match res with
                 | Sum.inl n => Except.error s!"{n}"
                 | Sum.inr _parsingValue?' => pure true
-      | ',' =>
-              pure true
+      -- | ',' =>
+      --         pure true
+      | ']' => dbg_trace "is ]"
+               pure false
       | _ => if true
               then
                 let w ← parseWord str ""
@@ -118,7 +131,7 @@ mutual
                   --   | Sum.inl n => Except.error s!"{n}"
                   --   | Sum.inr parsingValue?' => matchAndReadPair str parsingValue?'
                 else
-                  Except.error s!"Expected value!"
+                  Except.error s!"Expected value! got {w}"
               else pure true
 
   partial def matchAndReadPair (str : String) (parsingValue? : Bool) : Parser Bool := do
@@ -230,15 +243,24 @@ mutual
               readChar str ch parsingValue?'
         | ',' =>
           _ ← consumeChar str
-          let quote ← peekChar str
-          if quote != '"' then
-            Except.error s!"Expected \" actual {c1}!"
+          let res ← matchAndReadPair str false
+          if res then
+            readChar str ch false
           else
-            let res ← matchAndReadPair str false
-            if res then
-              readChar str ch false
-            else
-              pure false
+            pure false
+
+          -- dbg_trace s!"c1 is {c1}"
+          -- _ ← consumeChar str
+          -- let quote ← peekChar str
+          -- if quote != '"' then
+          --   dbg_trace s!"spos {spos}"
+          --   Except.error s!"Expected \" actual {quote}!"
+          -- else
+          --   let res ← matchAndReadPair str false
+          --   if res then
+          --     readChar str ch false
+          --   else
+          --     pure false
         | _ =>
             if parsingValue? then
               Except.error s!"unexpected key {c1}"

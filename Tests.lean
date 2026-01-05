@@ -48,6 +48,8 @@ def validJSONTests : TestSuite :=
   |>.addTest "testing arrays 3" (testJSONValid " {\"bar\":[\"q\", \"q\", \"q\"]}")
   |>.addTest "testing arrays 4" (testJSONValid " {\"bar\":[22, 43, \"q\"]}")
   |>.addTest "testing arrays 5" (testJSONValid " {\"bar\":[22, 43, {\"bar\":\"yelp\"}]}")
+  |>.addTest "testing nested arrays" (testJSONValid "{\"bar\":[22, [], {\"bar\":\"yelp\"}]}")
+  |>.addTest "testing nested arrays 2" (testJSONValid " {\"bar\":[22, []]}")
 
 
 /-- Main function to run all tests -/
